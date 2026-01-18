@@ -15,59 +15,8 @@
 
 ---
 
-## 🛠️ Tech Stack
 
-* Frontend: *(Add your tech here — e.g., HTML, CSS, JavaScript, React)*
-* Backend: *(Optional — Node.js, Python, etc.)*
-* Database: *(Optional — Firebase, MongoDB, etc.)*
 
-> Update this section based on what you actually used.
-
----
-
-## 📂 Project Structure
-
-```
-JMI-Timetable-Studio/
-│── src/
-│── public/
-│── assets/
-│── README.md
-```
-
----
-
-## ⚙️ Installation & Setup
-
-1. Clone the repository
-
-   ```bash
-   git clone https://github.com/your-username/JMI-Timetable-Studio.git
-   ```
-
-2. Navigate to the project directory
-
-   ```bash
-   cd JMI-Timetable-Studio
-   ```
-
-3. Run the project
-
-   ```bash
-   npm start
-   ```
-
-   *(or open `index.html` if it’s a static project)*
-
----
-
-## 🎯 Use Case
-
-* JMI students planning weekly class schedules
-* Faculty organizing lecture timings
-* Anyone looking for a simple academic timetable manager
-
----
 
 ## 🤝 Contributing
 
