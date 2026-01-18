@@ -1,0 +1,3075 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JMI Timetable Studio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <style>
+        :root {
+            --primary: #045e34;
+            --primary-light: #067a45;
+            --primary-dark: #034526;
+            --secondary: #e67e22;
+            --secondary-light: #f39c12;
+            --bg-light: #f0f4f8;
+            --bg-dark: #1a1d21;
+            --card-light: rgba(255, 255, 255, 0.85);
+            --card-dark: rgba(30, 35, 40, 0.9);
+            --text-light: #333;
+            --text-dark: #e8e8e8;
+            --border-light: rgba(255, 255, 255, 0.5);
+            --border-dark: rgba(255, 255, 255, 0.1);
+            --shadow-light: 0 8px 32px rgba(0, 0, 0, 0.1);
+            --shadow-dark: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #e8f5e9 0%, #f0f4f8 50%, #e3f2fd 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            padding: 20px;
+            transition: all 0.4s ease;
+        }
+
+        body.dark-mode {
+            background: linear-gradient(135deg, #1a1d21 0%, #2d3436 50%, #1a1d21 100%);
+        }
+
+        body.dark-mode .glass-card {
+            background: var(--card-dark);
+            border-color: var(--border-dark);
+            box-shadow: var(--shadow-dark);
+        }
+
+        body.dark-mode .glass-card,
+        body.dark-mode .card-title,
+        body.dark-mode .form-group label,
+        body.dark-mode .subject-block h4,
+        body.dark-mode .tips-content li {
+            color: var(--text-dark);
+        }
+
+        body.dark-mode .form-group input,
+        body.dark-mode .form-group select {
+            background: rgba(50, 55, 60, 0.9);
+            border-color: rgba(255, 255, 255, 0.15);
+            color: var(--text-dark);
+        }
+
+        body.dark-mode .subject-block {
+            background: rgba(40, 45, 50, 0.8);
+        }
+
+        body.dark-mode .day-checkbox label {
+            background: rgba(60, 65, 70, 0.9);
+            color: #bbb;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        body.dark-mode .day-checkbox label:hover {
+            background: rgba(70, 75, 80, 0.9);
+        }
+
+        body.dark-mode .day-checkbox input:checked + label {
+            background: linear-gradient(135deg, var(--primary-light), #089d59);
+            color: white;
+            box-shadow: 0 4px 12px rgba(6, 122, 69, 0.4);
+            border-color: transparent;
+        }
+
+        body.dark-mode .header p {
+            color: #aaa;
+        }
+
+        body.dark-mode .tips-content {
+            background: rgba(40, 45, 50, 0.95);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Animated Background Shapes */
+        .bg-shapes {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .bg-shape {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0.1;
+            animation: float 20s infinite ease-in-out;
+        }
+
+        .bg-shape:nth-child(1) {
+            width: 400px;
+            height: 400px;
+            background: var(--primary);
+            top: -100px;
+            left: -100px;
+            animation-delay: 0s;
+        }
+
+        .bg-shape:nth-child(2) {
+            width: 300px;
+            height: 300px;
+            background: var(--secondary);
+            top: 50%;
+            right: -50px;
+            animation-delay: -5s;
+        }
+
+        .bg-shape:nth-child(3) {
+            width: 200px;
+            height: 200px;
+            background: var(--primary-light);
+            bottom: -50px;
+            left: 30%;
+            animation-delay: -10s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            25% { transform: translate(20px, -30px) rotate(5deg); }
+            50% { transform: translate(-20px, 20px) rotate(-5deg); }
+            75% { transform: translate(30px, 10px) rotate(3deg); }
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            animation: fadeInDown 0.8s ease;
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .logo-container {
+            display: inline-flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+
+        .logo-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            color: white;
+            box-shadow: 0 4px 15px rgba(4, 94, 52, 0.3);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header h1 span {
+            background: linear-gradient(135deg, var(--secondary), var(--secondary-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            color: #666;
+            margin-top: 5px;
+            font-size: 1rem;
+        }
+
+        /* Theme Toggle */
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .toggle-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: none;
+            background: var(--card-light);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            font-size: 1.3rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .toggle-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        body.dark-mode .toggle-btn {
+            background: var(--card-dark);
+            color: var(--text-dark);
+            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.1);
+        }
+
+        body.dark-mode .toggle-btn:hover {
+            box-shadow: 0 6px 20px rgba(255, 255, 255, 0.15);
+        }
+
+        /* Glass Card */
+        .glass-card {
+            background: var(--card-light);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 24px;
+            border: 1px solid var(--border-light);
+            box-shadow: var(--shadow-light);
+            padding: 25px;
+            margin-bottom: 18px;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            animation: fadeInUp 0.6s ease forwards;
+            opacity: 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .glass-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .glass-card:hover::before {
+            left: 100%;
+        }
+
+        .glass-card:nth-child(1) { animation-delay: 0.05s; }
+        .glass-card:nth-child(2) { animation-delay: 0.1s; }
+        .glass-card:nth-child(3) { animation-delay: 0.15s; }
+        .glass-card:nth-child(4) { animation-delay: 0.2s; }
+        .glass-card:nth-child(5) { animation-delay: 0.25s; }
+        .glass-card:nth-child(6) { animation-delay: 0.3s; }
+        .glass-card:nth-child(7) { animation-delay: 0.35s; }
+        .glass-card:nth-child(8) { animation-delay: 0.4s; }
+        .glass-card:nth-child(9) { animation-delay: 0.45s; }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .glass-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 45px rgba(0, 0, 0, 0.15);
+            border-color: rgba(4, 94, 52, 0.2);
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .card-title .icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: white;
+        }
+
+        .card-title .badge {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            padding: 5px 14px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .card-title .badge.orange {
+            background: linear-gradient(135deg, var(--secondary), var(--secondary-light));
+        }
+
+        /* Quick Actions Bar */
+        .quick-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+            justify-content: center;
+            animation: fadeInUp 0.6s ease forwards;
+            animation-delay: 0.3s;
+            opacity: 0;
+        }
+
+        .quick-btn {
+            padding: 10px 20px;
+            border: 2px solid var(--primary);
+            background: transparent;
+            color: var(--primary);
+            border-radius: 25px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .quick-btn:hover {
+            background: var(--primary);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(4, 94, 52, 0.3);
+        }
+
+        body.dark-mode .quick-btn {
+            border-color: var(--primary-light);
+            color: var(--primary-light);
+        }
+
+        body.dark-mode .quick-btn:hover {
+            background: var(--primary-light);
+            color: white;
+            box-shadow: 0 4px 15px rgba(6, 122, 69, 0.4);
+        }
+
+        /* Tips Section */
+        .tips-section {
+            margin-bottom: 25px;
+            animation: fadeInUp 0.6s ease forwards;
+            animation-delay: 0.2s;
+            opacity: 0;
+        }
+
+        .tips-toggle {
+            width: 100%;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            border: none;
+            padding: 18px 25px;
+            border-radius: 16px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(4, 94, 52, 0.3);
+        }
+
+        .tips-toggle:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(4, 94, 52, 0.4);
+        }
+
+        .tips-toggle .arrow {
+            transition: transform 0.3s ease;
+            font-size: 0.8rem;
+        }
+
+        .tips-toggle.active .arrow {
+            transform: rotate(180deg);
+        }
+
+        .tips-content {
+            display: none;
+            padding: 25px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 0 0 16px 16px;
+            margin-top: -8px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .tips-content.show {
+            display: block;
+            animation: slideDown 0.4s ease;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .tips-content ul {
+            list-style: none;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 12px;
+        }
+
+        .tips-content li {
+            padding: 12px 15px;
+            color: #444;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            background: rgba(4, 94, 52, 0.05);
+            border-radius: 10px;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .tips-content li:hover {
+            background: rgba(4, 94, 52, 0.1);
+            transform: translateX(5px);
+        }
+
+        .tips-content li::before {
+            content: "\2714";
+            color: white;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            flex-shrink: 0;
+            font-weight: bold;
+            box-shadow: 0 2px 8px rgba(4, 94, 52, 0.3);
+        }
+
+        /* Input Grid */
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        /* Subject Block */
+        .subject-block {
+            background: linear-gradient(135deg, rgba(4, 94, 52, 0.03), rgba(4, 94, 52, 0.08));
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 4px solid var(--primary);
+            transition: all 0.3s ease;
+        }
+
+        .subject-block:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 15px rgba(4, 94, 52, 0.1);
+        }
+
+        .subject-block:last-child {
+            margin-bottom: 0;
+        }
+
+        .subject-block h4 {
+            font-size: 0.95rem;
+            color: var(--primary);
+            margin-bottom: 15px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .subject-block h4::before {
+            content: "";
+            width: 8px;
+            height: 8px;
+            background: var(--primary);
+            border-radius: 50%;
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.8rem;
+            color: #555;
+            margin-bottom: 6px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-group input[type="text"],
+        .form-group select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e5eb;
+            border-radius: 12px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            background: white;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.02);
+        }
+
+        .form-group input[type="text"]:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(4, 94, 52, 0.12), 0 4px 12px rgba(4, 94, 52, 0.08);
+            transform: translateY(-1px);
+        }
+
+        .form-group input[type="text"]::placeholder {
+            color: #aaa;
+        }
+
+        .form-group input[type="color"] {
+            width: 100%;
+            height: 50px;
+            border: 2px solid #e0e5eb;
+            border-radius: 12px;
+            cursor: pointer;
+            padding: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input[type="color"]:hover {
+            border-color: var(--primary);
+        }
+
+        /* Day Checkboxes */
+        .days-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .day-checkbox {
+            position: relative;
+        }
+
+        .day-checkbox input {
+            display: none;
+        }
+
+        .day-checkbox label {
+            display: block;
+            padding: 10px 16px;
+            background: #e8ecef;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            color: #666;
+            user-select: none;
+        }
+
+        .day-checkbox label:hover {
+            background: #dde3e8;
+            transform: translateY(-2px);
+        }
+
+        .day-checkbox input:checked + label {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            box-shadow: 0 4px 12px rgba(4, 94, 52, 0.3);
+        }
+
+        /* Buttons */
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            margin: 35px 0;
+            animation: fadeInUp 0.6s ease forwards;
+            animation-delay: 0.5s;
+            opacity: 0;
+        }
+
+        .btn {
+            padding: 16px 40px;
+            border: none;
+            border-radius: 14px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            box-shadow: 0 4px 15px rgba(4, 94, 52, 0.3), 0 2px 8px rgba(4, 94, 52, 0.2);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(4, 94, 52, 0.4), 0 4px 15px rgba(4, 94, 52, 0.3);
+        }
+
+        .btn-primary:active {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(4, 94, 52, 0.35);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, var(--secondary), var(--secondary-light));
+            color: white;
+            box-shadow: 0 4px 15px rgba(230, 126, 34, 0.3);
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(230, 126, 34, 0.4);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-outline:hover {
+            background: var(--primary);
+            color: white;
+            transform: translateY(-3px);
+        }
+
+        body.dark-mode .btn-outline {
+            border-color: var(--primary-light);
+            color: var(--primary-light);
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card {
+            background: var(--card-light);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid var(--border-light);
+            transition: all 0.3s ease;
+        }
+
+        body.dark-mode .stat-card {
+            background: var(--card-dark);
+            border-color: var(--border-dark);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+        }
+
+        .stat-card .number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        body.dark-mode .stat-card .number {
+            color: var(--primary-light);
+        }
+
+        .stat-card .label {
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        body.dark-mode .stat-card .label {
+            color: #bbb;
+        }
+
+        /* Timetable Container */
+        .timetable-container {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            overflow-x: auto;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        body.dark-mode .timetable-container {
+            background: rgba(30, 35, 40, 0.9);
+        }
+
+        #timetable-wrapper {
+            background: white;
+            padding: 25px;
+            min-width: 900px;
+        }
+
+        body.dark-mode #timetable-wrapper {
+            background: white;
+        }
+
+        .timetable-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .timetable-header h2 {
+            font-family: Arial, sans-serif;
+            font-size: 1.6rem;
+            font-weight: bold;
+            color: #000;
+            margin-bottom: 8px;
+        }
+
+        .timetable-header p {
+            font-family: Arial, sans-serif;
+            font-size: 1rem;
+            color: #333;
+        }
+
+        /* Timetable */
+        #timetable {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: Arial, sans-serif;
+            font-size: 13px;
+            table-layout: fixed;
+        }
+
+        #timetable th,
+        #timetable td {
+            border: 1.5px solid #000;
+            padding: 12px 8px;
+            text-align: center;
+            vertical-align: middle;
+            width: 12.5%;
+        }
+
+        #timetable th {
+            background-color: var(--header-color, #d9ead3);
+            font-weight: bold;
+            color: #000;
+            font-size: 0.85rem;
+        }
+
+        #timetable td {
+            background: white;
+            min-height: 55px;
+            transition: all 0.2s ease;
+        }
+
+        #timetable td[contenteditable="true"]:focus {
+            outline: 3px solid var(--primary);
+            background: #f0fff4;
+        }
+
+        #timetable td[contenteditable="true"]:hover {
+            background: #f8f9fa;
+        }
+
+        #timetable tbody tr:nth-child(even) td {
+            background: #fafafa;
+        }
+
+        .timetable-footer {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 2px dashed #ccc;
+            font-family: Arial, sans-serif;
+            font-size: 11px;
+            color: #666;
+        }
+
+        /* Toast Notification */
+        .toast-container {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10000;
+            pointer-events: none;
+        }
+
+        .toast {
+            background: linear-gradient(135deg, #1a1a1a, #2d2d2d);
+            color: white;
+            padding: 16px 30px;
+            border-radius: 50px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+            opacity: 0;
+            transform: translateY(30px) scale(0.9);
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            pointer-events: auto;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        .toast.success {
+            border-left: 4px solid var(--primary);
+        }
+
+        .toast.success .toast-icon {
+            background: var(--primary);
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+        }
+
+        .toast.warning {
+            border-left: 4px solid var(--secondary);
+        }
+
+        .toast.warning .toast-icon {
+            background: var(--secondary);
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        /* Confirm Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            padding: 20px;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal-dialog {
+            background: white;
+            border-radius: 24px;
+            padding: 35px;
+            max-width: 420px;
+            width: 100%;
+            text-align: center;
+            animation: modalIn 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        body.dark-mode .modal-dialog {
+            background: var(--card-dark);
+        }
+
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.8) translateY(20px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .modal-dialog .modal-icon {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 2rem;
+        }
+
+        .modal-dialog h3 {
+            color: var(--secondary);
+            margin-bottom: 15px;
+            font-size: 1.4rem;
+        }
+
+        body.dark-mode .modal-dialog h3 {
+            color: var(--secondary-light);
+        }
+
+        .modal-dialog p {
+            color: #555;
+            margin-bottom: 25px;
+            line-height: 1.7;
+            font-size: 1rem;
+        }
+
+        body.dark-mode .modal-dialog p {
+            color: #aaa;
+        }
+
+        .modal-dialog .btn-group {
+            margin: 0;
+            animation: none;
+            opacity: 1;
+        }
+
+        .modal-dialog .btn {
+            padding: 14px 28px;
+            font-size: 0.95rem;
+        }
+
+        /* Color picker wrapper */
+        .color-picker-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .color-picker-wrapper input[type="color"] {
+            width: 70px;
+            height: 50px;
+            flex-shrink: 0;
+            border-radius: 12px;
+        }
+
+        .color-picker-wrapper span {
+            font-size: 0.9rem;
+            color: #666;
+            font-weight: 500;
+            background: #f0f0f0;
+            padding: 8px 15px;
+            border-radius: 8px;
+        }
+
+        body.dark-mode .color-picker-wrapper span {
+            background: rgba(60, 65, 70, 0.9);
+            color: #aaa;
+        }
+
+        /* Mobile Floating Actions */
+        .mobile-fab {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .fab-btn {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            border: none;
+            color: white;
+            font-size: 1.3rem;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .fab-btn.primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+        }
+
+        .fab-btn.secondary {
+            background: linear-gradient(135deg, var(--secondary), var(--secondary-light));
+        }
+
+        .fab-btn:hover {
+            transform: scale(1.1);
+        }
+
+        /* Progress Indicator */
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            width: 0%;
+            z-index: 10001;
+            transition: width 0.3s ease;
+        }
+
+        .progress-bar.active {
+            animation: progress 2s ease-in-out;
+        }
+
+        @keyframes progress {
+            0% { width: 0%; }
+            50% { width: 70%; }
+            100% { width: 100%; }
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .input-grid {
+                grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+                gap: 18px;
+            }
+
+            .stats-bar {
+                grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+                gap: 12px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 15px;
+                padding-bottom: 100px;
+            }
+
+            .header h1 {
+                font-size: 1.7rem;
+            }
+
+            .header p {
+                font-size: 0.95rem;
+            }
+
+            .logo-icon {
+                width: 50px;
+                height: 50px;
+                font-size: 1.4rem;
+            }
+
+            .input-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+
+            .glass-card {
+                padding: 22px;
+                border-radius: 20px;
+                margin-bottom: 16px;
+            }
+
+            .card-title {
+                font-size: 1.05rem;
+            }
+
+            .card-title .icon {
+                width: 38px;
+                height: 38px;
+            }
+
+            .btn-group {
+                flex-direction: column;
+                padding: 0 10px;
+                gap: 12px;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+                padding: 16px 30px;
+                font-size: 0.95rem;
+            }
+
+            .quick-actions {
+                display: none;
+            }
+
+            .mobile-fab {
+                display: flex;
+            }
+
+            .theme-toggle {
+                top: 15px;
+                right: 15px;
+            }
+
+            .toggle-btn {
+                width: 46px;
+                height: 46px;
+                font-size: 1.15rem;
+            }
+
+            .days-grid {
+                justify-content: flex-start;
+                gap: 7px;
+            }
+
+            .day-checkbox label {
+                padding: 9px 14px;
+                font-size: 0.75rem;
+            }
+
+            #timetable-wrapper {
+                padding: 18px;
+            }
+
+            #timetable th,
+            #timetable td {
+                padding: 10px 6px;
+                font-size: 11px;
+            }
+
+            .tips-content ul {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+
+            .tips-content li {
+                font-size: 0.85rem;
+                padding: 10px 12px;
+            }
+
+            .stats-bar {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px;
+            }
+
+            .stat-card {
+                padding: 18px;
+            }
+
+            .stat-card .number {
+                font-size: 1.8rem;
+            }
+
+            .subject-block {
+                padding: 18px;
+            }
+
+            .form-group {
+                margin-bottom: 13px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 12px;
+                padding-bottom: 90px;
+            }
+
+            .header {
+                margin-bottom: 25px;
+            }
+
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            .header p {
+                font-size: 0.9rem;
+            }
+
+            .logo-icon {
+                width: 45px;
+                height: 45px;
+                font-size: 1.25rem;
+            }
+
+            .glass-card {
+                padding: 18px;
+                border-radius: 18px;
+                margin-bottom: 14px;
+            }
+
+            .card-title {
+                flex-wrap: wrap;
+                font-size: 0.95rem;
+                gap: 10px;
+            }
+
+            .card-title .icon {
+                width: 34px;
+                height: 34px;
+                font-size: 0.95rem;
+            }
+
+            .card-title .badge {
+                font-size: 0.65rem;
+                padding: 4px 12px;
+            }
+
+            .day-checkbox label {
+                padding: 8px 11px;
+                font-size: 0.7rem;
+            }
+
+            .subject-block {
+                padding: 14px;
+                margin-bottom: 12px;
+            }
+
+            .subject-block h4 {
+                font-size: 0.85rem;
+                margin-bottom: 12px;
+            }
+
+            .form-group {
+                margin-bottom: 12px;
+            }
+
+            .form-group label {
+                font-size: 0.75rem;
+                margin-bottom: 5px;
+            }
+
+            .form-group input[type="text"],
+            .form-group select {
+                padding: 10px 13px;
+                font-size: 0.85rem;
+            }
+
+            .form-group input[type="color"] {
+                height: 45px;
+            }
+
+            .color-picker-wrapper span {
+                font-size: 0.85rem;
+                padding: 7px 12px;
+            }
+
+            .stat-card {
+                padding: 15px;
+            }
+
+            .stat-card .number {
+                font-size: 1.6rem;
+            }
+
+            .stat-card .label {
+                font-size: 0.75rem;
+            }
+
+            .btn {
+                padding: 14px 25px;
+                font-size: 0.9rem;
+            }
+
+            .tips-toggle {
+                padding: 15px 20px;
+                font-size: 0.95rem;
+            }
+
+            .tips-content {
+                padding: 20px;
+            }
+
+            .tips-content li {
+                font-size: 0.8rem;
+                padding: 9px 11px;
+            }
+
+            #timetable-wrapper {
+                padding: 12px;
+                min-width: 850px;
+            }
+
+            #timetable th,
+            #timetable td {
+                padding: 8px 4px;
+                font-size: 10px;
+            }
+
+            .timetable-header h2 {
+                font-size: 1.4rem;
+            }
+
+            .timetable-header p {
+                font-size: 0.9rem;
+            }
+
+            .fab-btn {
+                width: 52px;
+                height: 52px;
+                font-size: 1.2rem;
+            }
+
+            .mobile-fab {
+                bottom: 15px;
+                right: 15px;
+                gap: 10px;
+            }
+
+            .toggle-btn {
+                width: 42px;
+                height: 42px;
+                font-size: 1.05rem;
+            }
+
+            .theme-toggle {
+                top: 12px;
+                right: 12px;
+            }
+        }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-dark);
+        }
+
+        /* Print Styles */
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+
+            .glass-card, .tips-section, .btn-group, .quick-actions, 
+            .theme-toggle, .mobile-fab, .stats-bar, .input-grid,
+            .header, .bg-shapes, .page-footer {
+                display: none !important;
+            }
+
+            .timetable-container {
+                box-shadow: none;
+                padding: 0;
+            }
+        }
+
+        /* Page Footer */
+        .page-footer {
+            margin-top: 60px;
+            padding: 50px 30px 30px;
+            text-align: center;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 50%, var(--primary-dark) 100%);
+            border-radius: 30px 30px 0 0;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 -10px 40px rgba(4, 94, 52, 0.25), 0 -5px 20px rgba(4, 94, 52, 0.15);
+        }
+
+        .page-footer::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.08'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            opacity: 0.6;
+        }
+
+        .page-footer::after {
+            content: "";
+            position: absolute;
+            top: -2px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
+        }
+
+        .footer-content {
+            position: relative;
+            z-index: 1;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .footer-logo {
+            display: inline-flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
+            animation: fadeInDown 0.6s ease;
+        }
+
+        .footer-logo-icon {
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            color: white;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25), 0 4px 10px rgba(255, 255, 255, 0.1) inset;
+            border: 2px solid rgba(255, 255, 255, 0.35);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .footer-logo-icon:hover {
+            transform: translateY(-3px) rotate(5deg);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .footer-logo-text {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: white;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            letter-spacing: 0.5px;
+        }
+
+        .footer-logo-text span {
+            color: var(--secondary-light);
+            text-shadow: 0 2px 10px rgba(230, 126, 34, 0.4);
+        }
+
+        .footer-divider {
+            width: 80px;
+            height: 4px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+            margin: 25px auto;
+            border-radius: 3px;
+            position: relative;
+        }
+
+        .footer-divider::before,
+        .footer-divider::after {
+            content: "";
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .footer-divider::before {
+            left: -15px;
+        }
+
+        .footer-divider::after {
+            right: -15px;
+        }
+
+        .footer-credits {
+            color: rgba(255, 255, 255, 0.95);
+            font-size: 1.05rem;
+            margin-bottom: 20px;
+            line-height: 1.7;
+            font-weight: 400;
+        }
+
+        .footer-credits strong {
+            font-weight: 700;
+            color: white;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .footer-social {
+            display: flex;
+            justify-content: center;
+            gap: 18px;
+            margin: 25px 0;
+        }
+
+        .social-link {
+            width: 48px;
+            height: 48px;
+            background: rgba(255, 255, 255, 0.18);
+            backdrop-filter: blur(15px);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-decoration: none;
+            font-size: 1.3rem;
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25), 0 2px 8px rgba(255, 255, 255, 0.1) inset;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .social-link::before {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: translate(-50%, -50%);
+            transition: width 0.4s ease, height 0.4s ease;
+        }
+
+        .social-link:hover::before {
+            width: 100%;
+            height: 100%;
+        }
+
+        .social-link:hover {
+            transform: translateY(-5px) scale(1.1);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+        }
+
+        .social-link.instagram:hover {
+            background: linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045);
+            border-color: transparent;
+            box-shadow: 0 8px 30px rgba(253, 29, 29, 0.6), 0 4px 15px rgba(253, 29, 29, 0.4);
+        }
+
+        .social-link.github:hover {
+            background: #24292e;
+            border-color: #24292e;
+            box-shadow: 0 8px 30px rgba(36, 41, 46, 0.6), 0 4px 15px rgba(36, 41, 46, 0.4);
+        }
+
+        .social-link svg {
+            position: relative;
+            z-index: 1;
+        }
+
+        .footer-year {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9rem;
+            margin-top: 20px;
+            font-weight: 500;
+        }
+
+        .footer-tagline {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.85rem;
+            margin-top: 10px;
+            font-style: italic;
+            letter-spacing: 0.3px;
+        }
+
+        .footer-hearts {
+            color: #ff6b6b;
+            display: inline-block;
+            animation: heartbeat 1.5s infinite;
+            font-size: 1.1rem;
+            filter: drop-shadow(0 2px 4px rgba(255, 107, 107, 0.5));
+        }
+
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); }
+            10% { transform: scale(1.3); }
+            20% { transform: scale(1); }
+            30% { transform: scale(1.3); }
+            40% { transform: scale(1); }
+        }
+
+        body.dark-mode .page-footer {
+            background: linear-gradient(135deg, #1a1d21 0%, #2d3436 50%, #1a1d21 100%);
+            box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        @media (max-width: 768px) {
+            .page-footer {
+                margin-top: 40px;
+                padding: 40px 20px 25px;
+                border-radius: 25px 25px 0 0;
+            }
+
+            .footer-logo-icon {
+                width: 55px;
+                height: 55px;
+                font-size: 1.6rem;
+            }
+
+            .footer-logo-text {
+                font-size: 1.4rem;
+            }
+
+            .social-link {
+                width: 45px;
+                height: 45px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .page-footer {
+                margin-top: 30px;
+                padding: 35px 15px 20px;
+            }
+
+            .footer-logo {
+                gap: 12px;
+                margin-bottom: 20px;
+            }
+
+            .footer-logo-icon {
+                width: 48px;
+                height: 48px;
+                font-size: 1.4rem;
+                border-radius: 12px;
+            }
+
+            .footer-logo-text {
+                font-size: 1.15rem;
+            }
+
+            .footer-divider {
+                width: 60px;
+                margin: 20px auto;
+            }
+
+            .footer-credits {
+                font-size: 0.95rem;
+            }
+
+            .footer-social {
+                gap: 15px;
+                margin: 20px 0;
+            }
+
+            .social-link {
+                width: 42px;
+                height: 42px;
+                font-size: 1.15rem;
+            }
+
+            .footer-year {
+                font-size: 0.85rem;
+            }
+
+            .footer-tagline {
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Background Shapes -->
+    <div class="bg-shapes">
+        <div class="bg-shape"></div>
+        <div class="bg-shape"></div>
+        <div class="bg-shape"></div>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="progress-bar" id="progressBar"></div>
+
+    <!-- Theme Toggle -->
+    <div class="theme-toggle">
+        <button class="toggle-btn" onclick="toggleDarkMode()" title="Toggle Dark Mode">&#9790;</button>
+    </div>
+
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo-container">
+                <div class="logo-icon">&#128218;</div>
+                <h1>JMI <span>Timetable</span> Studio</h1>
+            </div>
+            <p>Create your perfect class schedule in minutes</p>
+        </header>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+            <button class="quick-btn" onclick="resetDefaults()">🔄 Reset Defaults</button>
+            <button class="quick-btn" onclick="scrollToPreview()">👁 View Preview</button>
+        </div>
+
+        <!-- Tips Section -->
+        <div class="tips-section">
+            <button class="tips-toggle" onclick="toggleTips()">
+                <span>💡 Tips &amp; Quick Guide</span>
+                <span class="arrow">▼</span>
+            </button>
+            <div class="tips-content" id="tipsContent">
+                <ul>
+                    <li>Fill in your subject details - each card represents a subject category</li>
+                    <li>Select the days and time slots for each subject using checkboxes</li>
+                    <li>Click "Update Timetable" to apply all settings to the preview</li>
+                    <li>Directly edit any cell by clicking on it in the preview</li>
+                    <li>Use color picker to customize the header color</li>
+                    <li>Conflicts are detected - you'll be asked before overwriting</li>
+                    <li>Download as PNG for printing or sharing on social media</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Stats Bar -->
+        <div class="stats-bar">
+            <div class="stat-card glass-card" style="animation-delay: 0.1s;">
+                <div class="number" id="totalClasses">0</div>
+                <div class="label">Total Classes</div>
+            </div>
+            <div class="stat-card glass-card" style="animation-delay: 0.15s;">
+                <div class="number" id="totalHours">0</div>
+                <div class="label">Hours/Week</div>
+            </div>
+            <div class="stat-card glass-card" style="animation-delay: 0.2s;">
+                <div class="number" id="freeSlots">0</div>
+                <div class="label">Free Slots</div>
+            </div>
+            <div class="stat-card glass-card" style="animation-delay: 0.25s;">
+                <div class="number" id="busiestDay">-</div>
+                <div class="label">Busiest Day</div>
+            </div>
+        </div>
+
+        <!-- Input Cards Grid -->
+        <div class="input-grid">
+            <!-- Card 1: Settings -->
+            <div class="glass-card">
+                <div class="card-title">
+                    <span class="icon">⚙</span>
+                    <span>Settings</span>
+                    <span class="badge">Config</span>
+                </div>
+                <div class="form-group">
+                    <label>Course Title</label>
+                    <input type="text" id="courseTitle" value="B.Sc. (H) Computer Science - 2nd Semester" placeholder="Enter course title">
+                </div>
+                <div class="form-group">
+                    <label>Table Header Color</label>
+                    <div class="color-picker-wrapper">
+                        <input type="color" id="headerColor" value="#d9ead3">
+                        <span id="colorHex">#d9ead3</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 2: Major Subjects + Lab -->
+            <div class="glass-card">
+                <div class="card-title">
+                    <span class="icon">📖</span>
+                    <span>Major Subjects</span>
+                    <span class="badge">Core</span>
+                </div>
+                
+                <div class="subject-block">
+                    <h4>Major Subject 1 </h4>
+                    <div class="form-group">
+                        <label>Subject Name</label>
+                        <input type="text" id="major1Name" value="C++ Programming">
+                    </div>
+                    <div class="form-group">
+                        <label>Room Number</label>
+                        <input type="text" id="major1Room" value="SB02/03" placeholder="Room No.">
+                    </div>
+                    <div class="form-group">
+                        <label>Time Slot</label>
+                        <select id="major1Time">
+                            <option value="0">8:30 - 9:30</option>
+                            <option value="1">9:30 - 10:30</option>
+                            <option value="2" selected>10:30 - 11:30</option>
+                            <option value="3">11:30 - 12:30</option>
+                            <option value="4">12:30 - 1:30</option>
+                            <option value="5">2:00 - 3:00</option>
+                            <option value="6">3:00 - 4:00</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Days</label>
+                        <div class="days-grid">
+                            <div class="day-checkbox">
+                                <input type="checkbox" id="major1Mon" checked>
+                                <label for="major1Mon">Mon</label>
+                            </div>
+                            <div class="day-checkbox">
+                                <input type="checkbox" id="major1Tue" checked>
+                                <label for="major1Tue">Tue</label>
+                            </div>
+                            <div class="day-checkbox">
+                                <input type="checkbox" id="major1Wed" checked>
+                                <label for="major1Wed">Wed</label>
+                            </div>
+                            <div class="day-checkbox">
+                                <input type="checkbox" id="major1Thu">
+                                <label for="major1Thu">Thu</label>
+                            </div>
+                            <div class="day-checkbox">
+                                <input type="checkbox" id="major1Fri">
+                                <label for="major1Fri">Fri</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="subject-block">
+                    <h4>Major Subject 2 </h4>
+                    <div class="form-group">
+                        <label>Subject Name</label>
+                        <input type="text" id="major2Name" value="Digital Logic">
+                    </div>
+                    <div class="form-group">
+                        <label>Room Number</label>
+                        <input type="text" id="major2Room" value="SB-02/03" placeholder="Room No.">
+                    </div>
+                    <div class="form-group">
+                        <label>Time Slot</label>
+                        <select id="major2Time">
+                            <option value="0">8:30 - 9:30</option>
+                            <option value="1">9:30 - 10:30</option>
+                            <option value="2">10:30 - 11:30</option>
+                            <option value="3">11:30 - 12:30</option>
+                            <option value="4">12:30 - 1:30</option>
+                            <option value="5">2:00 - 3:00</option>
+                            <option value="6" selected>3:00 - 4:00</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Days</label>
+                        <div class="days-grid">
+                            <div class="day-checkbox">
+                                <input type="checkbox" id="major2Mon" checked>
+                                <label for="major2Mon">Mon</label>
+                            </div>
+                            <div class="day-checkbox">
+                                <input type="checkbox" id="major2Tue" checked>
+                                <label for="major2Tue">Tue</label>
+                            </div>
+                            <div class="day-checkbox">
+                                <input type="checkbox" id="major2Wed" checked>
+                                <label for="major2Wed">Wed</label>
+                            </div>
+                            <div class="day-checkbox">
+                                <input type="checkbox" id="major2Thu">
+                                <label for="major2Thu">Thu</label>
+                            </div>
+                            <div class="day-checkbox">
+                                <input type="checkbox" id="major2Fri">
+                                <label for="major2Fri">Fri</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="subject-block">
+                    <h4>Major Lab - (2 Hours)</h4>
+                    <div class="form-group">
+                        <label>Lab Name</label>
+                        <input type="text" id="labName" value="Lab-II (C++)">
+                    </div>
+                    <div class="form-group">
+                        <label>Room Number</label>
+                        <input type="text" id="labRoom" value="" placeholder="Room No.">
+                    </div>
+                    <div class="form-group">
+                        <label>Time Slot (2 hours)</label>
+                        <select id="labTime">
+                            <option value="0">8:30 - 10:30</option>
+                            <option value="2" selected>10:30 - 12:30</option>
+                            <option value="4">12:30 - 2:30</option>
+                            <option value="5">2:00 - 4:00</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Days</label>
+                        <div class="days-grid">
+                            <div class="day-checkbox">
+                                <input type="checkbox" id="labMon">
+                                <label for="labMon">Mon</label>
+                            </div>
+                            <div class="day-checkbox">
+                                <input type="checkbox" id="labTue">
+                                <label for="labTue">Tue</label>
+                            </div>
+                            <div class="day-checkbox">
+                                <input type="checkbox" id="labWed">
+                                <label for="labWed">Wed</label>
+                            </div>
+                            <div class="day-checkbox">
+                                <input type="checkbox" id="labThu" checked>
+                                <label for="labThu">Thu</label>
+                            </div>
+                            <div class="day-checkbox">
+                                <input type="checkbox" id="labFri" checked>
+                                <label for="labFri">Fri</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 3: Compulsory Subjects -->
+            <div class="glass-card">
+                <div class="card-title">
+                    <span class="icon">📚</span>
+                    <span>Compulsory Subjects</span>
+                    <span class="badge">Required</span>
+                </div>
+                
+                <div class="subject-block">
+                    <h4>Language (Urdu)</h4>
+                    <div class="form-group">
+                        <label>Subject Name</label>
+                        <input type="text" id="lang1Name" value="Urdu">
+                    </div>
+                    <div class="form-group">
+                        <label>Room Number</label>
+                        <input type="text" id="lang1Room" value="NSB-101" placeholder="Room No.">
+                    </div>
+                    <div class="form-group">
+                        <label>Time Slot</label>
+                        <select id="lang1Time">
+                            <option value="0" selected>8:30 - 9:30</option>
+                            <option value="1">9:30 - 10:30</option>
+                            <option value="2">10:30 - 11:30</option>
+                            <option value="3">11:30 - 12:30</option>
+                            <option value="4">12:30 - 1:30</option>
+                            <option value="5">2:00 - 3:00</option>
+                            <option value="6">3:00 - 4:00</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Days</label>
+                        <div class="days-grid">
+                            <div class="day-checkbox">
+                                <input type="checkbox" id="lang1Mon" checked>
+                                <label for="lang1Mon">Mon</label>
+                            </div>
+                            <div class="day-checkbox">
+                                <input type="checkbox" id="lang1Tue" checked>
+                                <label for="lang1Tue">Tue</label>
+                            </div>
+                            <div class="day-checkbox">
+                                <input type="checkbox" id="lang1Wed">
+                                <label for="lang1Wed">Wed</label>
+                            </div>
+                            <div class="day-checkbox">
+                                <input type="checkbox" id="lang1Thu">
+                                <label for="lang1Thu">Thu</label>
+                            </div>
+                            <div class="day-checkbox">
+                                <input type="checkbox" id="lang1Fri">
+                                <label for="lang1Fri">Fri</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="subject-block">
+                    <h4>Islamiat / IRC / Hindu Religion Study</h4>
+                    <div class="form-group">
+                        <label>Select Subject</label>
+                        <select id="religionName">
+                            <option value="Islamiat" selected>Islamiat</option>
+                            <option value="IRC">IRC (Islamic Religious Culture)</option>
+                            <option value="Hindu Religion Study">Hindu Religion Study</option>
+                           
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Room Number</label>
+                        <input type="text" id="religionRoom" value="NSB-02" placeholder="Room No.">
+                    </div>
+                    <div class="form-group">
+                        <label>Time Slot</label>
+                        <select id="religionTime">
+                            <option value="0" selected>8:30 - 9:30</option>
+                            <option value="1">9:30 - 10:30</option>
+                            <option value="2">10:30 - 11:30</option>
+                            <option value="3">11:30 - 12:30</option>
+                            <option value="4">12:30 - 1:30</option>
+                            <option value="5">2:00 - 3:00</option>
+                            <option value="6">3:00 - 4:00</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Days</label>
+                        <div class="days-grid">
+                            <div class="day-checkbox">
+                                <input type="checkbox" id="religionMon">
+                                <label for="religionMon">Mon</label>
+                            </div>
+                            <div class="day-checkbox">
+                                <input type="checkbox" id="religionTue">
+                                <label for="religionTue">Tue</label>
+                            </div>
+                            <div class="day-checkbox">
+                                <input type="checkbox" id="religionWed" checked>
+                                <label for="religionWed">Wed</label>
+                            </div>
+                            <div class="day-checkbox">
+                                <input type="checkbox" id="religionThu" checked>
+                                <label for="religionThu">Thu</label>
+                            </div>
+                            <div class="day-checkbox">
+                                <input type="checkbox" id="religionFri">
+                                <label for="religionFri">Fri</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 4: AEC -->
+            <div class="glass-card">
+                <div class="card-title">
+                    <span class="icon">🌐</span>
+                    <span>AEC</span>
+                    <span class="badge orange">Ability Enhancement Course</span>
+                </div>
+                
+                <div class="subject-block">
+                    <h4>English / Communication</h4>
+                    <div class="form-group">
+                        <label>Subject Name</label>
+                        <input type="text" id="aecName" value="English">
+                    </div>
+                    <div class="form-group">
+                        <label>Room Number</label>
+                        <input type="text" id="aecRoom" value="NTB-04" placeholder="Room No.">
+                    </div>
+                    <div class="form-group">
+                        <label>Time Slot</label>
+                        <select id="aecTime">
+                            <option value="0">8:30 - 9:30</option>
+                            <option value="1" selected>9:30 - 10:30</option>
+                            <option value="2">10:30 - 11:30</option>
+                            <option value="3">11:30 - 12:30</option>
+                            <option value="4">12:30 - 1:30</option>
+                            <option value="5">2:00 - 3:00</option>
+                            <option value="6">3:00 - 4:00</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Days</label>
+                        <div class="days-grid">
+                            <div class="day-checkbox">
+                                <input type="checkbox" id="aecMon" checked>
+                                <label for="aecMon">Mon</label>
+                            </div>
+                            <div class="day-checkbox">
+                                <input type="checkbox" id="aecTue" checked>
+                                <label for="aecTue">Tue</label>
+                            </div>
+                            <div class="day-checkbox">
+                                <input type="checkbox" id="aecWed">
+                                <label for="aecWed">Wed</label>
+                            </div>
+                            <div class="day-checkbox">
+                                <input type="checkbox" id="aecThu">
+                                <label for="aecThu">Thu</label>
+                            </div>
+                            <div class="day-checkbox">
+                                <input type="checkbox" id="aecFri">
+                                <label for="aecFri">Fri</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 5: Minor -->
+            <div class="glass-card">
+                <div class="card-title">
+                    <span class="icon">📗</span>
+                    <span>Minor Subject</span>
+                    <span class="badge orange">Elective</span>
+                </div>
+                <div class="subject-block">
+                    <div class="form-group">
+                        <label>Subject Name</label>
+                        <input type="text" id="minorName" value="Minor" placeholder="e.g., Statistics">
+                    </div>
+                    <div class="form-group">
+                        <label>Room Number</label>
+                        <input type="text" id="minorRoom" value="" placeholder="Room No.">
+                    </div>
+                    <div class="form-group">
+                        <label>Time Slot</label>
+                        <select id="minorTime">
+                            <option value="0">8:30 - 9:30</option>
+                            <option value="1">9:30 - 10:30</option>
+                            <option value="2">10:30 - 11:30</option>
+                            <option value="3">11:30 - 12:30</option>
+                            <option value="4" selected>12:30 - 1:30</option>
+                            <option value="5">2:00 - 3:00</option>
+                            <option value="6">3:00 - 4:00</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Days</label>
+                        <div class="days-grid">
+                            <div class="day-checkbox">
+                                <input type="checkbox" id="minorMon" checked>
+                                <label for="minorMon">Mon</label>
+                            </div>
+                            <div class="day-checkbox">
+                                <input type="checkbox" id="minorTue" checked>
+                                <label for="minorTue">Tue</label>
+                            </div>
+                            <div class="day-checkbox">
+                                <input type="checkbox" id="minorWed" checked>
+                                <label for="minorWed">Wed</label>
+                            </div>
+                            <div class="day-checkbox">
+                                <input type="checkbox" id="minorThu" checked>
+                                <label for="minorThu">Thu</label>
+                            </div>
+                            <div class="day-checkbox">
+                                <input type="checkbox" id="minorFri">
+                                <label for="minorFri">Fri</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 6: SEC -->
+            <div class="glass-card">
+                <div class="card-title">
+                    <span class="icon">💼</span>
+                    <span>SEC</span>
+                    <span class="badge">Skill Enhancement Courses</span>
+                </div>
+                <div class="subject-block">
+                    <div class="form-group">
+                        <label>Subject Name</label>
+                        <input type="text" id="secName" value="SEC" placeholder="Skill Enhancement Course">
+                    </div>
+                    <div class="form-group">
+                        <label>Room Number</label>
+                        <input type="text" id="secRoom" value="" placeholder="Room No.">
+                    </div>
+                    <div class="form-group">
+                        <label>Time Slot</label>
+                        <select id="secTime">
+                            <option value="0">8:30 - 9:30</option>
+                            <option value="1">9:30 - 10:30</option>
+                            <option value="2">10:30 - 11:30</option>
+                            <option value="3">11:30 - 12:30</option>
+                            <option value="4">12:30 - 1:30</option>
+                            <option value="5" selected>2:00 - 3:00</option>
+                            <option value="6">3:00 - 4:00</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Days</label>
+                        <div class="days-grid">
+                            <div class="day-checkbox">
+                                <input type="checkbox" id="secMon" checked>
+                                <label for="secMon">Mon</label>
+                            </div>
+                            <div class="day-checkbox">
+                                <input type="checkbox" id="secTue" checked>
+                                <label for="secTue">Tue</label>
+                            </div>
+                            <div class="day-checkbox">
+                                <input type="checkbox" id="secWed" checked>
+                                <label for="secWed">Wed</label>
+                            </div>
+                            <div class="day-checkbox">
+                                <input type="checkbox" id="secThu">
+                                <label for="secThu">Thu</label>
+                            </div>
+                            <div class="day-checkbox">
+                                <input type="checkbox" id="secFri">
+                                <label for="secFri">Fri</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 7: MDC -->
+            <div class="glass-card">
+                <div class="card-title">
+                    <span class="icon">📚</span>
+                    <span>MDC</span>
+                    <span class="badge orange">Multidisciplinary Courses</span>
+                </div>
+                <div class="subject-block">
+                    <div class="form-group">
+                        <label>Subject Name</label>
+                        <input type="text" id="mdcName" value="MDC" placeholder="Multi-Disciplinary Course">
+                    </div>
+                    <div class="form-group">
+                        <label>Room Number</label>
+                        <input type="text" id="mdcRoom" value="" placeholder="Room No.">
+                    </div>
+                    <div class="form-group">
+                        <label>Time Slot</label>
+                        <select id="mdcTime">
+                            <option value="0">8:30 - 9:30</option>
+                            <option value="1" selected>9:30 - 10:30</option>
+                            <option value="2">10:30 - 11:30</option>
+                            <option value="3">11:30 - 12:30</option>
+                            <option value="4">12:30 - 1:30</option>
+                            <option value="5">2:00 - 3:00</option>
+                            <option value="6">3:00 - 4:00</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Days</label>
+                        <div class="days-grid">
+                            <div class="day-checkbox">
+                                <input type="checkbox" id="mdcMon">
+                                <label for="mdcMon">Mon</label>
+                            </div>
+                            <div class="day-checkbox">
+                                <input type="checkbox" id="mdcTue">
+                                <label for="mdcTue">Tue</label>
+                            </div>
+                            <div class="day-checkbox">
+                                <input type="checkbox" id="mdcWed" checked>
+                                <label for="mdcWed">Wed</label>
+                            </div>
+                            <div class="day-checkbox">
+                                <input type="checkbox" id="mdcThu" checked>
+                                <label for="mdcThu">Thu</label>
+                            </div>
+                            <div class="day-checkbox">
+                                <input type="checkbox" id="mdcFri" checked>
+                                <label for="mdcFri">Fri</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 8: VAC -->
+            <div class="glass-card">
+                <div class="card-title">
+                    <span class="icon">🎨</span>
+                    <span>VAC</span>
+                    <span class="badge">Value Addition Courses</span>
+                </div>
+                <div class="subject-block">
+                    <div class="form-group">
+                        <label>Subject Name</label>
+                        <input type="text" id="vacName" value="VAC" placeholder="Value Added Course">
+                    </div>
+                    <div class="form-group">
+                        <label>Room Number</label>
+                        <input type="text" id="vacRoom" value="" placeholder="Room No.">
+                    </div>
+                    <div class="form-group">
+                        <label>Time Slot</label>
+                        <select id="vacTime">
+                            <option value="0">8:30 - 9:30</option>
+                            <option value="1">9:30 - 10:30</option>
+                            <option value="2">10:30 - 11:30</option>
+                            <option value="3">11:30 - 12:30</option>
+                            <option value="4">12:30 - 1:30</option>
+                            <option value="5" selected>2:00 - 3:00</option>
+                            <option value="6">3:00 - 4:00</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Days</label>
+                        <div class="days-grid">
+                            <div class="day-checkbox">
+                                <input type="checkbox" id="vacMon">
+                                <label for="vacMon">Mon</label>
+                            </div>
+                            <div class="day-checkbox">
+                                <input type="checkbox" id="vacTue">
+                                <label for="vacTue">Tue</label>
+                            </div>
+                            <div class="day-checkbox">
+                                <input type="checkbox" id="vacWed">
+                                <label for="vacWed">Wed</label>
+                            </div>
+                            <div class="day-checkbox">
+                                <input type="checkbox" id="vacThu" checked>
+                                <label for="vacThu">Thu</label>
+                            </div>
+                            <div class="day-checkbox">
+                                <input type="checkbox" id="vacFri" checked>
+                                <label for="vacFri">Fri</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 9: Custom/Extra -->
+            <div class="glass-card">
+                <div class="card-title">
+                    <span class="icon">➕</span>
+                    <span>Custom Class</span>
+                    <span class="badge orange">Special</span>
+                </div>
+                <div class="subject-block">
+                    <div class="form-group">
+                        <label>Class Name</label>
+                        <input type="text" id="customName" value="" placeholder="e.g., Remedial Class">
+                    </div>
+                    <div class="form-group">
+                        <label>Room Number</label>
+                        <input type="text" id="customRoom" value="" placeholder="Room No.">
+                    </div>
+                    <div class="form-group">
+                        <label>Specific Day</label>
+                        <select id="customDay">
+                            <option value="1">Monday</option>
+                            <option value="2">Tuesday</option>
+                            <option value="3">Wednesday</option>
+                            <option value="4">Thursday</option>
+                            <option value="5" selected>Friday</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Time Slot</label>
+                        <select id="customTime">
+                            <option value="0">8:30 - 9:30</option>
+                            <option value="1">9:30 - 10:30</option>
+                            <option value="2">10:30 - 11:30</option>
+                            <option value="3">11:30 - 12:30</option>
+                            <option value="4">12:30 - 1:30</option>
+                            <option value="5">2:00 - 3:00</option>
+                            <option value="6" selected>3:00 - 4:00</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="btn-group">
+            <button class="btn btn-primary" onclick="updateTimetable()">
+                <span>🔄</span> Update Timetable
+            </button>
+            <button class="btn btn-secondary" onclick="downloadTimetable()">
+                <span>📥</span> Download as PNG
+            </button>
+            <button class="btn btn-outline" onclick="clearTimetable()">
+                <span>🗑</span> Clear All
+            </button>
+        </div>
+
+        <!-- Timetable Preview -->
+        <div class="glass-card" id="previewSection" style="animation-delay: 0.6s;">
+            <div class="card-title">
+                <span class="icon">&#128197;</span>
+                <span>Timetable Preview</span>
+                <span class="badge">Editable</span>
+            </div>
+            <div class="timetable-container">
+                <div id="timetable-wrapper">
+                    <div class="timetable-header">
+                        <h2>JAMIA MILLIA ISLAMIA</h2>
+                        <p id="timetable-course-title">B.Sc. (H) Computer Science - 2nd Semester</p>
+                    </div>
+                    <table id="timetable">
+                        <thead>
+                            <tr>
+                                <th>Day/Time</th>
+                                <th>8:30-9:30</th>
+                                <th>9:30-10:30</th>
+                                <th>10:30-11:30</th>
+                                <th>11:30-12:30</th>
+                                <th>12:30-1:30</th>
+                                <th>2:00-3:00</th>
+                                <th>3:00-4:00</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="font-weight: bold; background: #f8f9fa;">Monday</td>
+                                <td contenteditable="true"></td>
+                                <td contenteditable="true"></td>
+                                <td contenteditable="true"></td>
+                                <td contenteditable="true"></td>
+                                <td contenteditable="true"></td>
+                                <td contenteditable="true"></td>
+                                <td contenteditable="true"></td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight: bold; background: #f8f9fa;">Tuesday</td>
+                                <td contenteditable="true"></td>
+                                <td contenteditable="true"></td>
+                                <td contenteditable="true"></td>
+                                <td contenteditable="true"></td>
+                                <td contenteditable="true"></td>
+                                <td contenteditable="true"></td>
+                                <td contenteditable="true"></td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight: bold; background: #f8f9fa;">Wednesday</td>
+                                <td contenteditable="true"></td>
+                                <td contenteditable="true"></td>
+                                <td contenteditable="true"></td>
+                                <td contenteditable="true"></td>
+                                <td contenteditable="true"></td>
+                                <td contenteditable="true"></td>
+                                <td contenteditable="true"></td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight: bold; background: #f8f9fa;">Thursday</td>
+                                <td contenteditable="true"></td>
+                                <td contenteditable="true"></td>
+                                <td contenteditable="true"></td>
+                                <td contenteditable="true"></td>
+                                <td contenteditable="true"></td>
+                                <td contenteditable="true"></td>
+                                <td contenteditable="true"></td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight: bold; background: #f8f9fa;">Friday</td>
+                                <td contenteditable="true"></td>
+                                <td contenteditable="true"></td>
+                                <td contenteditable="true"></td>
+                                <td contenteditable="true"></td>
+                                <td contenteditable="true"></td>
+                                <td contenteditable="true"></td>
+                                <td contenteditable="true"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="timetable-footer">
+                        Generated by JMI Timetable Studio | Developed by Md Raza Ansari
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Page Footer -->
+    <footer class="page-footer">
+        <div class="footer-content">
+            <div class="footer-logo">
+                <div class="footer-logo-icon">📚</div>
+                <div class="footer-logo-text">JMI <span>Timetable</span> Studio</div>
+            </div>
+            
+            <div class="footer-divider"></div>
+            
+            <p class="footer-credits">
+                Developed with <span class="footer-hearts">❤</span> by <strong>Md Raza Ansari</strong>
+            </p>
+            
+            <div class="footer-social">
+                <a href="https://www.instagram.com/imraza_2007" target="_blank" rel="noopener" class="social-link instagram" title="Follow on Instagram">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+                </a>
+                <a href="https://github.com/imraza8872" target="_blank" rel="noopener" class="social-link github" title="Visit GitHub">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                </a>
+            </div>
+            
+            <p class="footer-year">© <span id="currentYear"></span> All Rights Reserved</p>
+            <p class="footer-tagline">Making student life easier, one timetable at a time.</p>
+        </div>
+    </footer>
+
+    <!-- Mobile Floating Actions -->
+    <div class="mobile-fab">
+        <button class="fab-btn secondary" onclick="downloadTimetable()" title="Download">&#128229;</button>
+        <button class="fab-btn primary" onclick="updateTimetable()" title="Update">&#128260;</button>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container">
+        <div class="toast" id="toast"></div>
+    </div>
+
+    <!-- Confirm Modal -->
+    <div class="modal-overlay" id="confirmModal">
+        <div class="modal-dialog">
+            <div class="modal-icon">&#9888;</div>
+            <h3>Slot Conflict Detected</h3>
+            <p id="conflictMessage">This slot is already occupied. Do you want to overwrite it?</p>
+            <div class="btn-group">
+                <button class="btn btn-primary" id="confirmYes">Yes, Overwrite</button>
+                <button class="btn btn-outline" id="confirmNo">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', function() {
+            updateTimetable();
+            
+            // Set current year in footer
+            document.getElementById('currentYear').textContent = new Date().getFullYear();
+            
+            // Color picker event
+            document.getElementById('headerColor').addEventListener('input', function(e) {
+                document.getElementById('colorHex').textContent = e.target.value.toUpperCase();
+                updateHeaderColor(e.target.value);
+            });
+
+            // Check for saved dark mode preference
+            if (localStorage.getItem('darkMode') === 'true') {
+                document.body.classList.add('dark-mode');
+            }
+        });
+
+        // Toggle Dark Mode
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            var isDark = document.body.classList.contains('dark-mode');
+            localStorage.setItem('darkMode', isDark);
+            showToast(isDark ? 'Dark mode enabled' : 'Light mode enabled', 'success');
+        }
+
+        // Toggle Tips Section
+        function toggleTips() {
+            var btn = document.querySelector('.tips-toggle');
+            var content = document.getElementById('tipsContent');
+            btn.classList.toggle('active');
+            content.classList.toggle('show');
+        }
+
+        // Scroll to Preview
+        function scrollToPreview() {
+            document.getElementById('previewSection').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Update Header Color
+        function updateHeaderColor(color) {
+            var headers = document.querySelectorAll('#timetable th');
+            for (var i = 0; i < headers.length; i++) {
+                headers[i].style.backgroundColor = color;
+            }
+        }
+
+        // Show Toast Notification
+        function showToast(message, type) {
+            type = type || 'success';
+            var toast = document.getElementById('toast');
+            var iconContent = type === 'success' ? '&#10003;' : '!';
+            toast.className = 'toast ' + type;
+            toast.innerHTML = '<span class="toast-icon">' + iconContent + '</span><span>' + message + '</span>';
+            toast.classList.add('show');
+            
+            setTimeout(function() {
+                toast.classList.remove('show');
+            }, 3500);
+        }
+
+        // Show Confirm Dialog
+        function showConfirmDialog(message) {
+            return new Promise(function(resolve) {
+                var modal = document.getElementById('confirmModal');
+                var msgEl = document.getElementById('conflictMessage');
+                msgEl.textContent = message;
+                modal.classList.add('show');
+
+                var yesBtn = document.getElementById('confirmYes');
+                var noBtn = document.getElementById('confirmNo');
+
+                function cleanup() {
+                    modal.classList.remove('show');
+                    yesBtn.removeEventListener('click', handleYes);
+                    noBtn.removeEventListener('click', handleNo);
+                }
+
+                function handleYes() {
+                    cleanup();
+                    resolve(true);
+                }
+
+                function handleNo() {
+                    cleanup();
+                    resolve(false);
+                }
+
+                yesBtn.addEventListener('click', handleYes);
+                noBtn.addEventListener('click', handleNo);
+            });
+        }
+
+        // Set cell content
+        function setCellContent(dayIndex, timeIndex, content, force) {
+            var table = document.getElementById('timetable');
+            var row = table.rows[dayIndex];
+            if (row && row.cells[timeIndex + 1]) {
+                var cell = row.cells[timeIndex + 1];
+                var existing = cell.innerHTML.trim();
+                
+                if (existing && existing !== content && !force) {
+                    return { conflict: true, existing: existing, cell: cell };
+                }
+                
+                cell.innerHTML = content;
+                return { conflict: false };
+            }
+            return { conflict: false };
+        }
+
+        // Format subject entry
+        function formatSubject(name, room) {
+            if (!name) return '';
+            var text = name;
+            if (room) {
+                text += '<br><small style="color:#555;font-size:11px;">(' + room + ')</small>';
+            }
+            return text;
+        }
+
+        // Process subject with conflict detection
+        async function processSubject(config) {
+            var name = config.name;
+            var room = config.room;
+            var timeSlot = config.timeSlot;
+            var days = config.days;
+            var isLab = config.isLab;
+            
+            if (!name) return;
+
+            var content = formatSubject(name, room);
+            var dayMap = { Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5 };
+
+            for (var dayKey in dayMap) {
+                if (days[dayKey]) {
+                    var dayIndex = dayMap[dayKey];
+                    if (isLab) {
+                        for (var i = 0; i < 2; i++) {
+                            var slotIndex = parseInt(timeSlot) + i;
+                            var result = setCellContent(dayIndex, slotIndex, content);
+                            if (result.conflict) {
+                                var plainText = result.existing.replace(/<[^>]*>/g, '');
+                                var overwrite = await showConfirmDialog(
+                                    'Slot occupied by "' + plainText + '". Overwrite with "' + name + '"?'
+                                );
+                                if (overwrite) {
+                                    setCellContent(dayIndex, slotIndex, content, true);
+                                }
+                            }
+                        }
+                    } else {
+                        var result = setCellContent(dayIndex, parseInt(timeSlot), content);
+                        if (result.conflict) {
+                            var plainText = result.existing.replace(/<[^>]*>/g, '');
+                            var overwrite = await showConfirmDialog(
+                                'Slot occupied by "' + plainText + '". Overwrite with "' + name + '"?'
+                            );
+                            if (overwrite) {
+                                setCellContent(dayIndex, parseInt(timeSlot), content, true);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Update Stats
+        function updateStats() {
+            var table = document.getElementById('timetable');
+            var totalClasses = 0;
+            var dayCounts = { Mon: 0, Tue: 0, Wed: 0, Thu: 0, Fri: 0 };
+            var dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+
+            for (var i = 1; i <= 5; i++) {
+                for (var j = 1; j <= 7; j++) {
+                    if (table.rows[i] && table.rows[i].cells[j]) {
+                        var content = table.rows[i].cells[j].innerHTML.trim();
+                        if (content) {
+                            totalClasses++;
+                            dayCounts[dayNames[i - 1]]++;
+                        }
+                    }
+                }
+            }
+
+            document.getElementById('totalClasses').textContent = totalClasses;
+            document.getElementById('totalHours').textContent = totalClasses;
+            document.getElementById('freeSlots').textContent = 35 - totalClasses;
+
+            var maxDay = 'Mon';
+            var maxCount = 0;
+            for (var day in dayCounts) {
+                if (dayCounts[day] > maxCount) {
+                    maxCount = dayCounts[day];
+                    maxDay = day;
+                }
+            }
+            document.getElementById('busiestDay').textContent = maxCount > 0 ? maxDay : '-';
+        }
+
+        // Update Timetable
+        async function updateTimetable() {
+            // Show progress
+            var progressBar = document.getElementById('progressBar');
+            progressBar.classList.add('active');
+
+            // Update course title
+            var courseTitle = document.getElementById('courseTitle').value;
+            document.getElementById('timetable-course-title').textContent = courseTitle;
+
+            // Update header color
+            var headerColor = document.getElementById('headerColor').value;
+            updateHeaderColor(headerColor);
+
+            // Clear timetable first
+            clearTimetableData();
+
+            // Process all subjects
+            await processSubject({
+                name: document.getElementById('lang1Name').value,
+                room: document.getElementById('lang1Room').value,
+                timeSlot: document.getElementById('lang1Time').value,
+                days: {
+                    Mon: document.getElementById('lang1Mon').checked,
+                    Tue: document.getElementById('lang1Tue').checked,
+                    Wed: document.getElementById('lang1Wed').checked,
+                    Thu: document.getElementById('lang1Thu').checked,
+                    Fri: document.getElementById('lang1Fri').checked
+                }
+            });
+
+            await processSubject({
+                name: document.getElementById('aecName').value,
+                room: document.getElementById('aecRoom').value,
+                timeSlot: document.getElementById('aecTime').value,
+                days: {
+                    Mon: document.getElementById('aecMon').checked,
+                    Tue: document.getElementById('aecTue').checked,
+                    Wed: document.getElementById('aecWed').checked,
+                    Thu: document.getElementById('aecThu').checked,
+                    Fri: document.getElementById('aecFri').checked
+                }
+            });
+
+            await processSubject({
+                name: document.getElementById('major1Name').value,
+                room: document.getElementById('major1Room').value,
+                timeSlot: document.getElementById('major1Time').value,
+                days: {
+                    Mon: document.getElementById('major1Mon').checked,
+                    Tue: document.getElementById('major1Tue').checked,
+                    Wed: document.getElementById('major1Wed').checked,
+                    Thu: document.getElementById('major1Thu').checked,
+                    Fri: document.getElementById('major1Fri').checked
+                }
+            });
+
+            await processSubject({
+                name: document.getElementById('minorName').value,
+                room: document.getElementById('minorRoom').value,
+                timeSlot: document.getElementById('minorTime').value,
+                days: {
+                    Mon: document.getElementById('minorMon').checked,
+                    Tue: document.getElementById('minorTue').checked,
+                    Wed: document.getElementById('minorWed').checked,
+                    Thu: document.getElementById('minorThu').checked,
+                    Fri: document.getElementById('minorFri').checked
+                }
+            });
+
+            await processSubject({
+                name: document.getElementById('secName').value,
+                room: document.getElementById('secRoom').value,
+                timeSlot: document.getElementById('secTime').value,
+                days: {
+                    Mon: document.getElementById('secMon').checked,
+                    Tue: document.getElementById('secTue').checked,
+                    Wed: document.getElementById('secWed').checked,
+                    Thu: document.getElementById('secThu').checked,
+                    Fri: document.getElementById('secFri').checked
+                }
+            });
+
+            await processSubject({
+                name: document.getElementById('major2Name').value,
+                room: document.getElementById('major2Room').value,
+                timeSlot: document.getElementById('major2Time').value,
+                days: {
+                    Mon: document.getElementById('major2Mon').checked,
+                    Tue: document.getElementById('major2Tue').checked,
+                    Wed: document.getElementById('major2Wed').checked,
+                    Thu: document.getElementById('major2Thu').checked,
+                    Fri: document.getElementById('major2Fri').checked
+                }
+            });
+
+            await processSubject({
+                name: document.getElementById('religionName').value,
+                room: document.getElementById('religionRoom').value,
+                timeSlot: document.getElementById('religionTime').value,
+                days: {
+                    Mon: document.getElementById('religionMon').checked,
+                    Tue: document.getElementById('religionTue').checked,
+                    Wed: document.getElementById('religionWed').checked,
+                    Thu: document.getElementById('religionThu').checked,
+                    Fri: document.getElementById('religionFri').checked
+                }
+            });
+
+            await processSubject({
+                name: document.getElementById('mdcName').value,
+                room: document.getElementById('mdcRoom').value,
+                timeSlot: document.getElementById('mdcTime').value,
+                days: {
+                    Mon: document.getElementById('mdcMon').checked,
+                    Tue: document.getElementById('mdcTue').checked,
+                    Wed: document.getElementById('mdcWed').checked,
+                    Thu: document.getElementById('mdcThu').checked,
+                    Fri: document.getElementById('mdcFri').checked
+                }
+            });
+
+            await processSubject({
+                name: document.getElementById('labName').value,
+                room: document.getElementById('labRoom').value,
+                timeSlot: document.getElementById('labTime').value,
+                days: {
+                    Mon: document.getElementById('labMon').checked,
+                    Tue: document.getElementById('labTue').checked,
+                    Wed: document.getElementById('labWed').checked,
+                    Thu: document.getElementById('labThu').checked,
+                    Fri: document.getElementById('labFri').checked
+                },
+                isLab: true
+            });
+
+            await processSubject({
+                name: document.getElementById('vacName').value,
+                room: document.getElementById('vacRoom').value,
+                timeSlot: document.getElementById('vacTime').value,
+                days: {
+                    Mon: document.getElementById('vacMon').checked,
+                    Tue: document.getElementById('vacTue').checked,
+                    Wed: document.getElementById('vacWed').checked,
+                    Thu: document.getElementById('vacThu').checked,
+                    Fri: document.getElementById('vacFri').checked
+                }
+            });
+
+            // Process Custom
+            var customName = document.getElementById('customName').value;
+            if (customName) {
+                var customRoom = document.getElementById('customRoom').value;
+                var customDay = parseInt(document.getElementById('customDay').value);
+                var customTime = parseInt(document.getElementById('customTime').value);
+                var content = formatSubject(customName, customRoom);
+                
+                var result = setCellContent(customDay, customTime, content);
+                if (result.conflict) {
+                    var plainText = result.existing.replace(/<[^>]*>/g, '');
+                    var overwrite = await showConfirmDialog(
+                        'Slot occupied by "' + plainText + '". Overwrite with "' + customName + '"?'
+                    );
+                    if (overwrite) {
+                        setCellContent(customDay, customTime, content, true);
+                    }
+                }
+            }
+
+            // Update stats
+            updateStats();
+
+            // Hide progress and show toast
+            setTimeout(function() {
+                progressBar.classList.remove('active');
+                progressBar.style.width = '0%';
+            }, 500);
+
+            showToast('Timetable updated successfully!', 'success');
+        }
+
+        // Clear timetable data only
+        function clearTimetableData() {
+            var table = document.getElementById('timetable');
+            for (var i = 1; i <= 5; i++) {
+                for (var j = 1; j <= 7; j++) {
+                    if (table.rows[i] && table.rows[i].cells[j]) {
+                        table.rows[i].cells[j].innerHTML = '';
+                    }
+                }
+            }
+        }
+
+        // Clear all
+        function clearTimetable() {
+            clearTimetableData();
+            updateStats();
+            showToast('Timetable cleared!', 'success');
+        }
+
+        // Save to localStorage
+        function saveToStorage() {
+            var data = {
+                courseTitle: document.getElementById('courseTitle').value,
+                headerColor: document.getElementById('headerColor').value,
+                timetableHTML: document.getElementById('timetable').innerHTML
+            };
+
+            // Save all input values
+            var inputs = document.querySelectorAll('input[type="text"], select');
+            inputs.forEach(function(input) {
+                data[input.id] = input.value;
+            });
+
+            // Save all checkboxes
+            var checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(function(cb) {
+                data[cb.id] = cb.checked;
+            });
+
+            localStorage.setItem('jmiTimetableData', JSON.stringify(data));
+            showToast('Timetable saved successfully!', 'success');
+        }
+
+        // Load from localStorage
+        function loadFromStorage() {
+            var saved = localStorage.getItem('jmiTimetableData');
+            if (!saved) {
+                showToast('No saved timetable found!', 'warning');
+                return;
+            }
+
+            var data = JSON.parse(saved);
+
+            // Restore inputs
+            for (var key in data) {
+                var el = document.getElementById(key);
+                if (el) {
+                    if (el.type === 'checkbox') {
+                        el.checked = data[key];
+                    } else {
+                        el.value = data[key];
+                    }
+                }
+            }
+
+            // Restore timetable HTML
+            if (data.timetableHTML) {
+                document.getElementById('timetable').innerHTML = data.timetableHTML;
+            }
+
+            // Update color display
+            document.getElementById('colorHex').textContent = data.headerColor.toUpperCase();
+            updateHeaderColor(data.headerColor);
+            updateStats();
+
+            showToast('Timetable loaded successfully!', 'success');
+        }
+
+        // Reset to defaults
+        function resetDefaults() {
+            location.reload();
+        }
+
+        // Print Timetable
+        function printTimetable() {
+            window.print();
+        }
+
+        // Download Timetable as PNG
+        async function downloadTimetable() {
+            showToast('Generating high-quality image...', 'warning');
+            
+            var progressBar = document.getElementById('progressBar');
+            progressBar.classList.add('active');
+            
+            var wrapper = document.getElementById('timetable-wrapper');
+            
+            try {
+                var canvas = await html2canvas(wrapper, {
+                    scale: 2,
+                    useCORS: true,
+                    backgroundColor: '#ffffff',
+                    windowWidth: 1280,
+                    windowHeight: wrapper.scrollHeight + 100
+                });
+
+                var link = document.createElement('a');
+                var today = new Date().toISOString().slice(0,10);
+                link.download = 'JMI_Timetable_' + today + '.png';
+                link.href = canvas.toDataURL('image/png', 1.0);
+                link.click();
+
+                setTimeout(function() {
+                    progressBar.classList.remove('active');
+                    progressBar.style.width = '0%';
+                }, 500);
+
+                showToast('Timetable downloaded successfully!', 'success');
+            } catch (error) {
+                console.error('Download error:', error);
+                progressBar.classList.remove('active');
+                showToast('Error generating image. Please try again.', 'warning');
+            }
+        }
+    </script>
+</body>
+</html>
